@@ -1,6 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
 
+import * as d3 from 'd3-selection';
+
 function App() {
   return (
     <div className="App">

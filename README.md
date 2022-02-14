@@ -1,5 +1,17 @@
 This repo reproduces the problem with providing untranspiled code as a repo. 
 
+## The Work around
+
+The work around is to add this to your script test: 
+
+```
+    "test": "react-scripts test --transformIgnorePatterns 'node_modules/!(d3-selection|another-dependency-here)'",
+```
+
+Here, essentially we are saying 'don't attempt transpilation on any node_modules, _except_ these ones (ie. still transpile those).
+
+## Info
+
 In this case the offender is `d3-selection@3.0.0`
 
 To see the error: 

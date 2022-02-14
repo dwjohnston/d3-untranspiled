@@ -1,70 +1,88 @@
-# Getting Started with Create React App
+This repo reproduces the problem with providing untranspiled code as a repo. 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+In this case the offender is `d3-selection@3.0.0`
 
-## Available Scripts
+To see the error: 
 
-In the project directory, you can run:
+```
+yarn
+yarn test
+```
 
-### `npm start`
+To see the workaround, see the `workaround` branch. 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+ FAIL  src/App.test.js
+  ● Test suite failed to run
 
-### `npm test`
+    Jest encountered an unexpected token
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
 
-### `npm run build`
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+    By default "node_modules" folder is ignored by transformers.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
 
-### `npm run eject`
+    Details:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+    /home/djohnston/git/repros/d3-selection-untranspiled/node_modules/d3-selection/src/index.js:1
+    ({"Object.<anonymous>":function(module,exports,require,__dirname,__filename,jest){export {default as create} from "./create.js";
+                                                                                      ^^^^^^
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    SyntaxError: Unexpected token 'export'
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+      2 | import './App.css';
+      3 |
+    > 4 | import * as d3 from 'd3-selection';
+        | ^
+      5 |
+      6 | function App() {
+      7 |   return (
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+      at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1728:14)
+      at Object.<anonymous> (src/App.js:4:1)
 
-## Learn More
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.836 s
+Ran all test suites related to changed files.
+``` 
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## More details: 
 
-### Code Splitting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+The d3-selection package looks like this: 
 
-### Analyzing the Bundle Size
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```
+{
+  "name": "d3-selection",
+..snip
+  "type": "module",
+  "module": "src/index.js",
+  "main": "src/index.js",
+```
 
-### Making a Progressive Web App
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+I believe the problem here is that `main` also points to `src/index` - meaning the untranspiled code will be used, and then jest doesn't like it. 
 
-### Advanced Configuration
+I thought that perhaps deleting the `main` property might force the module resolution into using the module, but apparently not. 
+ 
+I'm not sure where it is configured, if anyone wants to shine some light, but it seems like jest is doing a plain cjs module resolution strategy for the node_modules. 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
